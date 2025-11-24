@@ -148,6 +148,12 @@ body {
 }
 
 /* Special Offer Styles */
+.special-offer-link {
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+}
+
 .special-offer {
     background: rgba(255, 107, 53, 0.95);
     padding: 2rem;
@@ -156,6 +162,12 @@ body {
     text-align: center;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     animation: pulse 2s infinite;
+    transition: all 0.3s ease;
+}
+
+.special-offer-link:hover .special-offer {
+    transform: scale(1.05);
+    box-shadow: 0 15px 40px rgba(255, 107, 53, 0.4);
 }
 
 @keyframes pulse {

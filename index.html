@@ -294,6 +294,30 @@
         });
 
         // Form submission - now handled by gohigh level
+
+        // Hide/show announcement bar on scroll
+        let lastScrollTop = 0;
+        const announcementBar = document.querySelector('.announcement-bar');
+        const scrollThreshold = 50; // Minimum scroll distance to trigger hide/show
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            // Only hide/show if scrolled past threshold
+            if (Math.abs(scrollTop - lastScrollTop) < scrollThreshold) {
+                return;
+            }
+
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                // Scrolling down - hide the bar
+                announcementBar.classList.add('hidden');
+            } else {
+                // Scrolling up - show the bar
+                announcementBar.classList.remove('hidden');
+            }
+
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // For mobile or negative scrolling
+        });
     </script>
 </body>
 </html>

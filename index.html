@@ -6,6 +6,24 @@
     <title>Property Pest Control - New Years Special $39</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Meta Pixel Code -->
+    <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '3178551882313638');
+        fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=3178551882313638&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
 </head>
 <body>
     <!-- Header -->
@@ -290,6 +308,138 @@
         });
 
         // Form submission - now handled by gohigh level
+
+        // Meta Pixel Conversion API Setup
+        const PIXEL_ID = '3178551882313638';
+        const ACCESS_TOKEN = 'EAAMpcpgBG1QBQGWJ20dj9V7fObnmuS247YwVrW8Qqa9g9fL4FU68pC6zfAICs8jZAgQzytd9PCulr6wMxIb4OAfVrTJI4tlaLYQvmJu68gE5ZAU46VvZA7gNk6LBeTUDxPUZAycS6y9NKbTLQsZADIAgo3i99KLpRWXwYUkJentlq1Mt3Qn2QubxIPZClulDMvAAZDZD';
+
+        // Function to send event to Conversion API
+        function sendToConversionAPI(eventName, eventData = {}) {
+            // Get user data from browser
+            const userData = {
+                client_ip_address: '', // Will be set server-side
+                client_user_agent: navigator.userAgent,
+                fbp: getCookie('_fbp') || '',
+                fbc: getCookie('_fbc') || ''
+            };
+
+            // Get event ID from pixel if available
+            const eventId = eventData.event_id || generateEventId();
+
+            const payload = {
+                data: [{
+                    event_name: eventName,
+                    event_time: Math.floor(Date.now() / 1000),
+                    event_id: eventId,
+                    event_source_url: window.location.href,
+                    action_source: 'website',
+                    user_data: userData,
+                    custom_data: eventData.custom_data || {}
+                }],
+                access_token: ACCESS_TOKEN
+            };
+
+            // Send to Conversion API
+            // Note: This may fail due to CORS - Conversion API typically requires server-side calls
+            fetch(`https://graph.facebook.com/v18.0/${PIXEL_ID}/events`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.log('Conversion API error:', data.error);
+                    // Fallback: Conversion API requires server-side implementation
+                    // The Pixel tracking will still work for browser-side events
+                } else {
+                    console.log('Conversion API success:', data);
+                }
+            })
+            .catch(error => {
+                console.log('Conversion API network error:', error);
+                // This is expected - Conversion API should be called server-side
+                // Pixel tracking will still work
+            });
+        }
+
+        // Helper function to get cookie
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return '';
+        }
+
+        // Generate unique event ID
+        function generateEventId() {
+            return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+
+        // Track Lead event (form submission)
+        function trackLeadEvent(formData = {}) {
+            // Track via Pixel
+            fbq('track', 'Lead', {
+                content_name: 'Pest Control Form Submission',
+                content_category: 'Contact Form',
+                value: 39.00,
+                currency: 'USD'
+            });
+
+            // Track via Conversion API
+            sendToConversionAPI('Lead', {
+                custom_data: {
+                    content_name: 'Pest Control Form Submission',
+                    content_category: 'Contact Form',
+                    value: 39.00,
+                    currency: 'USD'
+                }
+            });
+        }
+
+        // Listen for form submission events
+        // Since form is in iframe, we'll try to detect submission via postMessage or iframe events
+        window.addEventListener('message', function(event) {
+            // Check if message is from the form iframe
+            if (event.origin === 'https://api.leadconnectorhq.com' || event.origin === 'https://link.msgsndr.com') {
+                // If form submission detected, track lead
+                if (event.data && (event.data.type === 'form-submit' || event.data.formSubmitted)) {
+                    trackLeadEvent();
+                }
+            }
+        });
+
+        // Also listen for form iframe load completion as fallback
+        const formIframe = document.getElementById('inline-IG1sISyb4bIWu2ZCknCM');
+        if (formIframe) {
+            formIframe.addEventListener('load', function() {
+                // Try to access iframe content (may be blocked by CORS)
+                try {
+                    const iframeDoc = formIframe.contentDocument || formIframe.contentWindow.document;
+                    const form = iframeDoc.querySelector('form');
+                    if (form) {
+                        form.addEventListener('submit', function() {
+                            trackLeadEvent();
+                        });
+                    }
+                } catch (e) {
+                    // CORS blocked - will rely on postMessage or server-side tracking
+                    console.log('Iframe access blocked by CORS - using postMessage tracking');
+                }
+            });
+        }
+
+        // Track button clicks that lead to form
+        document.querySelectorAll('a[href="#contact"], .btn-primary').forEach(button => {
+            button.addEventListener('click', function() {
+                fbq('track', 'ViewContent', {
+                    content_name: 'Contact Form',
+                    content_category: 'Form View'
+                });
+            });
+        });
 
         // Hide/show announcement bar on scroll
         let lastScrollTop = 0;
